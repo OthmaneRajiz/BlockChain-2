@@ -1,0 +1,19 @@
+agricultural-supply-chain/
+├── contracts/
+│   ├── core/
+│   ├── finance/
+│   ├── governance/
+│   └── oracles/
+├── frontend/
+│   ├── farmer-app/
+│   ├── buyer-portal/
+│   └── consumer-app/
+├── backend/
+│   ├── api/
+│   ├── oracle-service/
+│   └── analytics/
+├── mobile/
+│   └── farmer-mobile/
+├── docs/
+├── scripts/
+└── tests/
