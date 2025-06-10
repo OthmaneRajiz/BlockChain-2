@@ -1,0 +1,115 @@
+const Web3 = require('web3');
+const { ethers } = require('ethers');
+const express = require('express');
+const app = express();
+const port = 4000; // Different port than the API
+const cors = require('cors'); // Enable CORS for frontend access
+
+// Configuration (replace with your actual values)
+const providerURL = 'YOUR_POLYGON_NODE_URL'; // e.g., Infura, Alchemy
+const productRegistryAddress = 'YOUR_PRODUCT_REGISTRY_CONTRACT_ADDRESS';
+const supplyChainTrackerAddress = 'YOUR_SUPPLY_CHAIN_TRACKER_CONTRACT_ADDRESS';
+
+// Database (replace with your actual database connection)
+// This example uses an in-memory array for simplicity
+let productData = [];
+let supplyChainData = [];
+
+// Smart Contract ABIs (replace with your actual ABIs)
+const productRegistryABI = [
+    // ... your ProductRegistry contract ABI ...
+    {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "productId",
+            "type": "uint256"
+          }
+        ],
+        "name": "ProductCreated",
+        "type": "event"
+      }
+];
+const supplyChainTrackerABI = [
+    // ... your SupplyChainTracker contract ABI ...
+    {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "productId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "enum SupplyChainTracker.Stage",
+            "name": "stage",
+            "type": "uint8"
+          }
+        ],
+        "name": "StageUpdated",
+        "type": "event"
+      }
+];
+
+// Initialize Web3 and Ethers
+const web3 = new Web3(providerURL);
+const provider = new ethers.providers.JsonRpcProvider(providerURL);
+
+// Create contract instances
+const productRegistryContract = new ethers.Contract(productRegistryAddress, productRegistryABI, provider);
+const supplyChainTrackerContract = new ethers.Contract(supplyChainTrackerAddress, supplyChainTrackerABI, provider);
+
+// Function to fetch and store product data
+async function fetchProductData() {
+    // Example: Fetch all ProductCreated events
+    productRegistryContract.on("ProductCreated", async (productId, event) => {
+        console.log(`Product Created: ${productId}`);
+        // Fetch product details from the contract
+        const product = await productRegistryContract.products(productId);
+        productData.push({
+            productId: productId.toNumber(),
+            productType: product.productType,
+            farmer: product.farmer,
+            quantity: product.quantity.toNumber(),
+            location: product.location,
+            harvestDate: product.harvestDate.toNumber(),
+            certifications: product.certifications
+        });
+    });
+}
+
+// Function to fetch and store supply chain data
+async function fetchSupplyChainData() {
+    // Example: Fetch all StageUpdated events
+    supplyChainTrackerContract.on("StageUpdated", async (productId, stage, event) => {
+        console.log(`Stage Updated for Product ${productId}: ${stage}`);
+        supplyChainData.push({
+            productId: productId.toNumber(),
+            stage: stage
+        });
+    });
+}
+
+// Start fetching data
+fetchProductData();
+fetchSupplyChainData();
+
+// API endpoints to serve the data
+app.use(cors()); // Enable CORS for all routes
+
+app.get('/products', (req, res) => {
+    res.json(productData);
+});
+
+app.get('/supplychain', (req, res) => {
+    res.json(supplyChainData);
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Analytics service listening at http://localhost:${port}`);
+});
