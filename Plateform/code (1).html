@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agricultural Supply Chain Tokenization Platform (Simplified)</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js" type="application/javascript"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        #output {
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simplified Agricultural Supply Chain Tokenization</h1>
+
+    <button onclick="deployContracts()">Deploy Contracts</button>
+    <button onclick="tokenizeProduct()">Tokenize Product</button>
+    <button onclick="trackProduct()">Track Product</button>
+    <button onclick="showProductInfo()">Show Product Info</button>
+
+    <div id="output"></div>
+
+    <script>
+        // ** Solidity Smart Contracts (Simplified) **
+        const ProductRegistryABI = [
+            {
+                "inputs": [
+                  {
+                    "internalType": "string",
+                    "name": "_productType",
+                    "type": "string"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "_farmer",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "_quantity",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "string",
+                    "name": "_location",
+                    "type": "string"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "_harvestDate",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "string[]",
+                    "name": "_certifications",
+                    "type": "string[]"
+                  },
+                  {
+                    "components": [
+                      {
+                        "internalType": "uint8",
+                        "name": "grade",
+                        "type": "uint8"
+                      },
+                      {
+                        "internalType": "string[]",
+                        "name": "testResults",
+                        "type": "string[]"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "lastInspection",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "address",
+                        "name": "inspector",
+                        "type": "address"
+                      }
+                    ],
+                    "internalType": "struct ProductRegistry.QualityMetrics",
+                    "name": "_quality",
+                    "type": "tuple"
+                  }
+                ],
+                "name": "createProduct",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "products",
+                "outputs": [
+                  {
+                    "internalType": "string",
+                    "name": "productType",
+                    "type": "string"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "farmer",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "quantity",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "string",
+                    "name": "location",
+                    "type": "string"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "harvestDate",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "struct ProductRegistry.QualityMetrics",
+                    "name": "quality",
+                    "type": "tuple"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              {
+                "inputs": [],
+                "name": "productCounter",
+                "outputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              }
+        ];
+
+        const SupplyChainTrackerABI = [
+            {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "_productId",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "enum SupplyChainTracker.Stage",
+                    "name": "_stage",
+                    "type": "uint8"
+                  },
+                  {
+                    "internalType": "string",
+                    "name": "_location",
+                    "type": "string"
+                  },
+                  {
+                    "components": [
+                      {
+                        "internalType": "string",
+                        "name": "testResults",
+                        "type": "string"
+                      },
+                      {
+                        "internalType": "address",
+                        "name": "inspector",
+                        "type": "address"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "timestamp",
+                        "type": "uint256"
+                      }
+                    ],
+                    "internalType": "struct SupplyChainTracker.QualityCheck",
+                    "name": "_qualityData",
+                    "type": "tuple"
+                  }
+                ],
+                "name": "addTrackingEvent",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "productTracking",
+                "outputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "timestamp",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "enum SupplyChainTracker.Stage",
+                    "name": "stage",
+                    "type": "uint8"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "handler",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "string",
+                    "name": "location",
+                    "type": "string"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              }
+        ];
+
+        // ** JavaScript Logic **
+        let provider;
+        let signer;
+        let productRegistryContract;
+        let supplyChainTrackerContract;
+        let productCounter = 0;
+
+        const contractAddresses = {
+            ProductRegistry: null,
+            SupplyChainTracker: null
+        };
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                try {
+                    await window.ethereum.enable(); // MetaMask request access
+                    signer = provider.getSigner();
+                    appendToOutput("Wallet connected.");
+                } catch (error) {
+                    appendToOutput("User denied account access.");
+                    console.error(error);
+                }
+            } else {
+                appendToOutput("MetaMask not detected. Please install it.");
+            }
+        }
+
+        async function deployContracts() {
+            await connectWallet();
+
+            // ** Mock Contract Deployment **
+            contractAddresses.ProductRegistry = "0xProductRegistryAddress"; // Replace with actual deployment
+            contractAddresses.SupplyChainTracker = "0xSupplyChainTrackerAddress"; // Replace with actual deployment
+
+            productRegistryContract = new ethers.Contract(contractAddresses.ProductRegistry, ProductRegistryABI, signer);
+            supplyChainTrackerContract = new ethers.Contract(contractAddresses.SupplyChainTracker, SupplyChainTrackerABI, signer);
+
+            appendToOutput("Contracts deployed (mock addresses used).");
+        }
+
+        async function tokenizeProduct() {
+            if (!productRegistryContract) {
+                appendToOutput("Contracts not deployed. Please deploy first.");
+                return;
+            }
+
+            productCounter++;
+
+            const productType = "Organic Apples";
+            const farmer = signer.getAddress();
+            const quantity = 1000;
+            const location = "Green Valley Farm";
+            const harvestDate = Math.floor(Date.now() / 1000); // Current timestamp
+            const certifications = ["Organic", "Fair Trade"];
+            const quality = {
+                grade: 95,
+                testResults: ["Pesticide-free", "High Brix"],
+                lastInspection: Math.floor(Date.now() / 1000),
+                inspector: signer.getAddress()
+            };
+
+            try {
+                // ** Mock Transaction **
+                appendToOutput(`Tokenizing product ${productCounter}: ${productType}`);
+                appendToOutput(`Farmer: ${await farmer}`);
+                appendToOutput(`Quantity: ${quantity}`);
+
+                // Simulate contract interaction
+                appendToOutput("Product tokenized (mock transaction).");
+            } catch (error) {
+                appendToOutput("Error tokenizing product.");
+                console.error(error);
+            }
+        }
+
+        async function trackProduct() {
+            if (!supplyChainTrackerContract) {
+                appendToOutput("Contracts not deployed. Please deploy first.");
+                return;
+            }
+
+            const productId = productCounter;
+            const stage = 1; // Processing
+            const location = "Processing Plant A";
+            const qualityData = {
+                testResults: "Processed and packaged",
+                inspector: signer.getAddress(),
+                timestamp: Math.floor(Date.now() / 1000)
+            };
+
+            try {
+                // ** Mock Transaction **
+                appendToOutput(`Tracking product ${productId}: Stage Processing`);
+                appendToOutput(`Location: ${location}`);
+
+                // Simulate contract interaction
+                appendToOutput("Product tracking updated (mock transaction).");
+            } catch (error) {
+                appendToOutput("Error tracking product.");
+                console.error(error);
+            }
+        }
+
+        async function showProductInfo() {
+            if (!productRegistryContract) {
+                appendToOutput("Contracts not deployed. Please deploy first.");
+                return;
+            }
+
+            const productId = productCounter;
+
+            try {
+                // ** Mock Contract Call **
+                appendToOutput(`Fetching product info for ${productId}...`);
+
+                // Simulate contract interaction
+                const productInfo = {
+                    productType: "Organic Apples",
+                    farmer: "0xFarmerAddress",
+                    quantity: 1000,
+                    location: "Processing Plant A",
+                    harvestDate: "2024-01-01",
+                    quality: "Grade A"
+                };
+
+                appendToOutput(`Product Type: ${productInfo.productType}`);
+                appendToOutput(`Farmer: ${productInfo.farmer}`);
+                appendToOutput(`Quantity: ${productInfo.quantity}`);
+                appendToOutput(`Location: ${productInfo.location}`);
+                appendToOutput(`Harvest Date: ${productInfo.harvestDate}`);
+                appendToOutput(`Quality: ${productInfo.quality}`);
+            } catch (error) {
+                appendToOutput("Error fetching product info.");
+                console.error(error);
+            }
+        }
+
+        function appendToOutput(message) {
+            const outputDiv = document.getElementById("output");
+            outputDiv.innerHTML += message + "\n";
+        }
+    </script>
+</body>
+</html>
